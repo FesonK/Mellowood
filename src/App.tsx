@@ -5,19 +5,9 @@ import { createServices, ServicesProvider, type AppServices } from '@/app/servic
 import { AuthProvider } from '@/auth/AuthContext';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { GoalPage } from '@/features/goal/GoalPage';
+import { LandingPage } from '@/features/landing/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { SignUpPage } from '@/pages/SignUpPage';
-import { Mascot } from '@/ui';
-
-function HomePlaceholder() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center gap-6 p-6 text-center">
-      <Mascot mood="cheering" size={140} />
-      <h1 className="text-5xl font-bold">Mellowood</h1>
-      <p className="text-ink-soft">Learn anything, one cozy step at a time.</p>
-    </main>
-  );
-}
 
 export function AppRoutes() {
   return (
@@ -29,7 +19,7 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <AppShell>
-              <HomePlaceholder />
+              <LandingPage />
             </AppShell>
           </RequireAuth>
         }
