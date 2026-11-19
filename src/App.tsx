@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AppShell } from '@/app/AppShell';
 import { createServices, ServicesProvider, type AppServices } from '@/app/services';
 import { AuthProvider } from '@/auth/AuthContext';
 import { RequireAuth } from '@/auth/RequireAuth';
@@ -26,7 +27,9 @@ export function AppRoutes() {
         path="/"
         element={
           <RequireAuth>
-            <HomePlaceholder />
+            <AppShell>
+              <HomePlaceholder />
+            </AppShell>
           </RequireAuth>
         }
       />
