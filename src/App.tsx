@@ -4,6 +4,7 @@ import { AppShell } from '@/app/AppShell';
 import { createServices, ServicesProvider, type AppServices } from '@/app/services';
 import { AuthProvider } from '@/auth/AuthContext';
 import { RequireAuth } from '@/auth/RequireAuth';
+import { GoalPage } from '@/features/goal/GoalPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { SignUpPage } from '@/pages/SignUpPage';
 import { Mascot } from '@/ui';
@@ -29,6 +30,16 @@ export function AppRoutes() {
           <RequireAuth>
             <AppShell>
               <HomePlaceholder />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/goal/new"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <GoalPage />
             </AppShell>
           </RequireAuth>
         }
