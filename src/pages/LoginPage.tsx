@@ -21,6 +21,11 @@ export function LoginPage() {
         </>
       }
     >
+      {auth.signOutReason() === 'expired' && (
+        <p role="status" className="mb-4 rounded-squish bg-butter/50 px-4 py-3 text-sm font-semibold">
+          Your session took a nap. Log in again to pick up where you left off.
+        </p>
+      )}
       <form noValidate onSubmit={form.onSubmit} className="flex flex-col gap-4">
         <Input
           label="Email"

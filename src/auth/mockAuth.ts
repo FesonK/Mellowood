@@ -1,7 +1,13 @@
-import type { AuthResult, AuthService, AuthUser } from './types';
+import type { AuthResult, AuthService, AuthUser, SignOutReason } from './types';
 import { normalizeEmail, validateEmail, validatePassword } from './validation';
 
 export const INVALID_CREDENTIALS = "That email and password don't match. Mind trying again?";
+export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+interface StoredSession {
+  user: AuthUser;
+  expiresAt: number;
+}
 
 interface StoredUser extends AuthUser {
   salt: string;
@@ -14,12 +20,39 @@ interface StoredUser extends AuthUser {
  */
 export class MockAuthService implements AuthService {
   private user: AuthUser | null = null;
+  private reason: SignOutReason | null = null;
   private listeners = new Set<(user: AuthUser | null) => void>();
 
   constructor(
     protected readonly storage: Storage,
     protected readonly prefix = 'mellowood:auth',
-  ) {}
+    protected readonly now: () => number = Date.now,
+  ) {
+    this.restoreSession();
+  }
+
+  private get sessionKey() {
+    return `${this.prefix}:session`;
+  }
+
+  private restoreSession() {
+    try {
+      const session = JSON.parse(this.storage.getItem(this.sessionKey) ?? 'null') as StoredSession | null;
+      if (!session) return;
+      if (session.expiresAt <= this.now()) {
+        this.storage.removeItem(this.sessionKey);
+        this.reason = 'expired';
+        return;
+      }
+      this.user = session.user;
+    } catch {
+      this.storage.removeItem(this.sessionKey);
+    }
+  }
+
+  signOutReason() {
+    return this.user ? null : this.reason;
+  }
 
   protected readUsers(): Record<string, StoredUser> {
     try {
@@ -35,6 +68,14 @@ export class MockAuthService implements AuthService {
 
   protected setUser(user: AuthUser | null) {
     this.user = user;
+    if (user) {
+      const session: StoredSession = { user, expiresAt: this.now() + SESSION_TTL_MS };
+      this.storage.setItem(this.sessionKey, JSON.stringify(session));
+      this.reason = null;
+    } else {
+      this.storage.removeItem(this.sessionKey);
+      this.reason = 'manual';
+    }
     this.listeners.forEach((l) => l(user));
   }
 

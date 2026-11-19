@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import type { AuthResult, AuthService, AuthUser } from './types';
+import type { AuthResult, AuthService, AuthUser, SignOutReason } from './types';
 import { INVALID_CREDENTIALS } from './mockAuth';
 import { normalizeEmail, validateEmail, validatePassword } from './validation';
 
@@ -8,17 +8,31 @@ const toUser = (u: User | null | undefined): AuthUser | null =>
 
 export class SupabaseAuthService implements AuthService {
   private user: AuthUser | null = null;
+  private reason: SignOutReason | null = null;
+  private manualSignOut = false;
   private listeners = new Set<(user: AuthUser | null) => void>();
 
   constructor(protected readonly client: SupabaseClient) {
-    client.auth.onAuthStateChange((_event, session) => {
+    // Supabase persists the session in localStorage and refreshes tokens; this keeps us in sync.
+    client.auth.onAuthStateChange((event, session) => {
+      const hadUser = Boolean(this.user);
       this.user = toUser(session?.user);
+      if (event === 'SIGNED_OUT') {
+        this.reason = this.manualSignOut || !hadUser ? 'manual' : 'expired';
+        this.manualSignOut = false;
+      } else if (this.user) {
+        this.reason = null;
+      }
       this.listeners.forEach((l) => l(this.user));
     });
   }
 
   current() {
     return this.user;
+  }
+
+  signOutReason() {
+    return this.user ? null : this.reason;
   }
 
   onChange(listener: (user: AuthUser | null) => void) {
@@ -47,6 +61,7 @@ export class SupabaseAuthService implements AuthService {
   }
 
   async signOut() {
+    this.manualSignOut = true;
     await this.client.auth.signOut();
   }
 }
