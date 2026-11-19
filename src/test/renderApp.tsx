@@ -5,11 +5,13 @@ import { ServicesProvider, type AppServices } from '@/app/services';
 import { AuthProvider } from '@/auth/AuthContext';
 import { MockAuthService } from '@/auth/mockAuth';
 import { MemoryRepository } from '@/data/memoryRepository';
+import { MockAIProvider } from '@/ai/mockProvider';
 
 export function makeTestServices(overrides: Partial<AppServices> = {}): AppServices {
   return {
     auth: new MockAuthService(localStorage),
     repo: new MemoryRepository(),
+    ai: new MockAIProvider({ delayMs: 0 }),
     ...overrides,
   };
 }
