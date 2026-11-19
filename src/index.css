@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --cream: 255 246 238;
+    --surface: 255 255 255;
+    --ink: 61 44 78;
+    --ink-soft: 122 104 140;
+    --peach: 255 183 161;
+    --blush: 255 198 217;
+    --lavender: 205 180 245;
+    --sky: 178 220 255;
+    --mint: 176 238 205;
+    --butter: 255 231 158;
+    --tangerine: 255 152 67;
+    --berry: 236 94 140;
+    --shadow: 120 80 140;
+    color-scheme: light;
+  }
+
+  [data-theme='dark'] {
+    --cream: 30 25 46;
+    --surface: 44 37 66;
+    --ink: 246 238 255;
+    --ink-soft: 190 175 210;
+    --peach: 255 160 140;
+    --blush: 240 150 185;
+    --lavender: 170 140 230;
+    --sky: 120 170 230;
+    --mint: 110 205 160;
+    --butter: 230 200 110;
+    --tangerine: 255 152 67;
+    --berry: 255 120 165;
+    --shadow: 0 0 0;
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-cream font-body text-ink antialiased;
+    background-image:
+      radial-gradient(40rem 30rem at 10% -10%, rgb(var(--blush) / 0.45), transparent 60%),
+      radial-gradient(36rem 28rem at 110% 10%, rgb(var(--sky) / 0.45), transparent 60%),
+      radial-gradient(40rem 30rem at 50% 120%, rgb(var(--mint) / 0.35), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-4 ring-lavender/70 ring-offset-2 ring-offset-cream;
+  }
+
+  ::selection {
+    background: rgb(var(--blush));
+  }
+}
+
+@layer components {
+  .glass {
+    @apply border border-white/60 bg-surface/70 backdrop-blur-xl;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, rgb(var(--lavender) / 0.15), rgb(var(--lavender) / 0.4), rgb(var(--lavender) / 0.15));
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded-squish;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
