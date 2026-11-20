@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button, Mascot } from '@/ui';
+import { DraftCard } from './DraftCard';
 
 export const EXAMPLE_GOALS = [
   'Build a robot arm that sorts Lego',
@@ -99,6 +100,8 @@ export function LandingPage() {
           </li>
         ))}
       </ul>
+
+      <DraftCard />
     </section>
   );
 }
