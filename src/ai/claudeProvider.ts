@@ -1,5 +1,5 @@
 import type { ConceptGraph } from '@/domain/graph/types';
-import type { AIProvider, ChatMessage, ClarifyResult, GoalSummary } from './types';
+import type { AIProvider, ChatMessage, ClarifyResult, GoalSummary, TaskContent, TaskRequest } from './types';
 
 export class AIError extends Error {
   constructor(message = 'Mellow had trouble thinking. Please try again.') {
@@ -40,6 +40,21 @@ export class ClaudeProvider implements AIProvider {
   generateGraph(summary: GoalSummary) {
     return this.call<ConceptGraph>('generateGraph', { summary }, isGraphShape);
   }
+
+  generateTask(input: TaskRequest) {
+    return this.call<TaskContent>('generateTask', input, isTaskContent);
+  }
+}
+
+function isTaskContent(d: unknown): d is TaskContent {
+  return (
+    isObject(d) &&
+    typeof d.hook === 'string' &&
+    typeof d.story === 'string' &&
+    Array.isArray(d.steps) &&
+    Array.isArray(d.doneWhen) &&
+    Array.isArray(d.hints)
+  );
 }
 
 const isObject = (d: unknown): d is Record<string, unknown> => typeof d === 'object' && d !== null;

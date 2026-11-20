@@ -65,7 +65,32 @@ Produce the dependency graph of concepts a learner needs to reach the goal. Rule
 - prerequisites reference other ids in this graph only; no cycles.
 - Exactly one final capstone concept with id "projects/<slug>" that is the learner's end goal, depending on the concepts that lead to it.`;
 
-type Action = 'clarifyGoal' | 'generateGraph';
+const TaskOutput = z.object({
+  hook: z.string().describe('Short, curiosity-sparking title that names the concept'),
+  story: z.string().describe('2-3 sentences framing the task as a small problem tied to the end goal'),
+  steps: z.array(z.string()),
+  doneWhen: z.array(z.string()),
+  hints: z.array(z.string()).describe('Exactly three progressive hints, gentlest first'),
+});
+
+const TaskRequest = z.object({
+  plan: z.object({
+    conceptId: z.string(),
+    difficulty: z.number().min(1).max(5),
+    framing: z.enum(['build', 'investigate', 'fix', 'challenge']),
+    reason: z.enum(['next', 'revisit']),
+  }),
+  concept: z.object({ id: z.string(), name: z.string(), summary: z.string(), hours: z.number(), prerequisites: z.array(z.string()) }),
+  goal: GoalSummary,
+});
+
+const TASK_SYSTEM = `${VOICE}
+Design one learning task for a single concept. Frame it as a psychologically enticing small problem
+(curiosity, a mystery, a rescue, a challenge) that clearly moves the learner toward their end goal.
+Match the requested framing and difficulty (1 = gentle, 5 = stretching): use difficulty + 2 concrete steps.
+Give 2-3 observable "done when" criteria and exactly three hints, gentlest first. Respect the learner's constraints.`;
+
+type Action = 'clarifyGoal' | 'generateGraph' | 'generateTask';
 
 async function structured<T extends z.ZodTypeAny>(system: string, userContent: string, schema: T) {
   const response = await client.beta.messages.parse({
@@ -99,6 +124,10 @@ async function handle(action: Action, payload: unknown) {
     const graph = await structured(GRAPH_SYSTEM, `Goal: ${JSON.stringify(summary)}`, GraphOutput);
     await admin.from('graph_cache').upsert({ goal_key: key, graph, created_at: new Date().toISOString() });
     return graph;
+  }
+  if (action === 'generateTask') {
+    const request = TaskRequest.parse(payload);
+    return structured(TASK_SYSTEM, `Task request: ${JSON.stringify(request)}`, TaskOutput);
   }
   throw new Error('unknown action');
 }
