@@ -3,12 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useServices } from '@/app/services';
 import { useAuth } from '@/auth/AuthContext';
 import type { Goal } from '@/domain/goal';
+import type { MasteryMap } from '@/domain/graph/types';
 import { GraphCache } from '@/domain/graph/graphCache';
 import { generateValidGraph, GraphGenerationError } from '@/domain/graph/graphService';
 import { loadMastery, saveMastery } from '@/domain/mastery/masteryStore';
 import { fromScratch, mergePlacement } from '@/domain/placement/placement';
-import { createStrategy } from '@/domain/strategy/strategy';
-import { saveStrategy } from '@/domain/strategy/strategyStore';
+import { createStrategy, type ChangelogEntry } from '@/domain/strategy/strategy';
+import { loadStrategy, saveStrategy } from '@/domain/strategy/strategyStore';
+import { ChangelogPanel } from '@/features/strategy/ChangelogPanel';
 import { buildTrack } from '@/domain/track/track';
 import { GraphSkeleton, GraphView } from '@/features/graph/GraphView';
 import { Button, Mascot } from '@/ui';
@@ -64,6 +66,18 @@ export function JourneyPage() {
   }, [goalId, repo, user, ensureGraph]);
 
   const [joining, setJoining] = useState(false);
+  const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
+  const [liveMastery, setLiveMastery] = useState<MasteryMap>({});
+
+  useEffect(() => {
+    if (!user || phase !== 'overview' || !goal?.graph) return;
+    let cancelled = false;
+    void loadStrategy(repo, user.id, goal.id, goal.graph, {}).then((s) => !cancelled && setChangelog(s?.changelog ?? []));
+    void loadMastery(repo, user.id).then((m) => !cancelled && setLiveMastery(m));
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, goal, repo, user]);
 
   /** Commit to the plan: build the custom track and a fresh strategy, then open the first task. */
   const join = async () => {
@@ -133,14 +147,17 @@ export function JourneyPage() {
       </div>
     );
 
+  const mastery: MasteryMap = { ...(goal.placement?.mastery ?? {}), ...liveMastery };
+
   return (
     <div className="flex flex-col gap-6">
       <header>
         <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-berry">Your path is ready</p>
         <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">{goal.summary.title}</h1>
       </header>
-      <EstimateCard graph={goal.graph} mastery={goal.placement?.mastery ?? {}} weeklyHours={goal.placement?.weeklyHours ?? 5} />
-      <GraphView graph={goal.graph} mastery={goal.placement?.mastery ?? {}} />
+      <EstimateCard graph={goal.graph} mastery={mastery} weeklyHours={goal.placement?.weeklyHours ?? 5} />
+      <GraphView graph={goal.graph} mastery={mastery} />
+      {goal.status === 'active' && <ChangelogPanel entries={changelog} />}
       <div className="glass sticky bottom-4 z-20 flex flex-col items-center gap-3 rounded-blob p-4 shadow-soft sm:flex-row sm:justify-between">
         <Button variant="ghost" size="sm" onClick={() => setPhase('placement')}>
           Redo placement
