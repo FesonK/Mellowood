@@ -5,7 +5,8 @@ import { useAuth } from '@/auth/AuthContext';
 import type { Goal } from '@/domain/goal';
 import { GraphCache } from '@/domain/graph/graphCache';
 import { generateValidGraph, GraphGenerationError } from '@/domain/graph/graphService';
-import { saveMastery } from '@/domain/mastery/masteryStore';
+import { loadMastery, saveMastery } from '@/domain/mastery/masteryStore';
+import { fromScratch, mergePlacement } from '@/domain/placement/placement';
 import { Button, Card, Mascot } from '@/ui';
 import { PlacementQuiz, type PlacementOutcome } from './PlacementQuiz';
 
@@ -58,12 +59,15 @@ export function JourneyPage() {
 
   const finishPlacement = async ({ mastery, weeklyHours }: PlacementOutcome, skipped = false) => {
     if (!user || !goal) return;
+    const merged = goal.placement ? mergePlacement(goal.placement.mastery, mastery) : mastery;
     const next: Goal = {
       ...goal,
-      placement: { mastery, weeklyHours, skipped, completedAt: new Date().toISOString() },
+      placement: { mastery: merged, weeklyHours, skipped, completedAt: new Date().toISOString() },
     };
     await repo.put(user.id, 'goals', next);
-    await saveMastery(repo, user.id, mastery);
+    // Mastery is global across goals: only ever raise it here, never wipe what was learned elsewhere.
+    const existing = await loadMastery(repo, user.id);
+    await saveMastery(repo, user.id, mergePlacement(existing, merged));
     setGoal(next);
     setPhase('overview');
   };
@@ -88,13 +92,27 @@ export function JourneyPage() {
     return (
       <div>
         <h1 className="mb-6 text-center text-3xl font-semibold">Let&apos;s find your starting spot</h1>
-        <PlacementQuiz graph={goal.graph} onComplete={(o) => void finishPlacement(o)} />
+        <PlacementQuiz
+          graph={goal.graph}
+          onComplete={(o) => void finishPlacement(o)}
+          extraActions={(weeklyHours) => (
+            <Button
+              variant="ghost"
+              onClick={() => void finishPlacement({ mastery: fromScratch(goal.graph!), weeklyHours }, true)}
+            >
+              Start me from scratch
+            </Button>
+          )}
+        />
       </div>
     );
 
   return (
     <Card title={goal.summary.title} eyebrow="Your path is ready">
       <p className="text-ink-soft">Overview coming right up.</p>
+      <Button variant="ghost" size="sm" className="mt-4" onClick={() => setPhase('placement')}>
+        Redo placement
+      </Button>
     </Card>
   );
 }
