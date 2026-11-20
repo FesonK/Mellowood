@@ -5,7 +5,7 @@ import type { ConceptGraph, MasteryMap } from '@/domain/graph/types';
 import type { Framing, TaskPlan } from '@/domain/strategy/strategy';
 import { MAX_DIFFICULTY } from '@/domain/strategy/strategy';
 import { GraphView } from '@/features/graph/GraphView';
-import { Badge, cn, type BadgeTone } from '@/ui';
+import { Badge, cn, MasteryRing, type BadgeTone } from '@/ui';
 
 const FRAMING_STYLE: Record<Framing, { tone: BadgeTone; emoji: string; label: string }> = {
   build: { tone: 'mint', emoji: '🛠️', label: 'Build' },
@@ -89,6 +89,15 @@ export function TaskCard({ task, plan, graph, mastery, children }: TaskCardProps
       </div>
 
       <aside aria-label="Where this task sits on your map" className="flex flex-col gap-3">
+        {concept && (
+          <div className="glass flex items-center gap-4 rounded-blob p-4 shadow-soft">
+            <MasteryRing value={mastery[concept.id] ?? 0} label={concept.name} />
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-ink-soft">Growing</p>
+              <p className="font-display text-lg font-semibold">{concept.name}</p>
+            </div>
+          </div>
+        )}
         <p className="text-sm font-extrabold uppercase tracking-wider text-ink-soft">On your map</p>
         <GraphView graph={graph} mastery={mastery} highlight={highlight} compact />
       </aside>
