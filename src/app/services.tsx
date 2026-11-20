@@ -2,6 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import type { AIProvider } from '@/ai/types';
 import { MockAIProvider } from '@/ai/mockProvider';
+import { ClaudeProvider, supabaseInvoker } from '@/ai/claudeProvider';
 import type { AuthService } from '@/auth/types';
 import { MockAuthService } from '@/auth/mockAuth';
 import { SupabaseAuthService } from '@/auth/supabaseAuth';
@@ -29,7 +30,8 @@ export function createServices(env: AppEnv = readEnv()): AppServices {
   });
   const repo = new SyncedRepository(local, new SupabaseRepository(client), { storage: localStorage });
   repo.autoFlush();
-  return { auth: new SupabaseAuthService(client), repo, ai };
+  const remoteAI = env.aiProvider === 'claude' ? new ClaudeProvider(supabaseInvoker(client)) : ai;
+  return { auth: new SupabaseAuthService(client), repo, ai: remoteAI };
 }
 
 const ServicesContext = createContext<AppServices | null>(null);

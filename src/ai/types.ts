@@ -1,3 +1,5 @@
+import type { ConceptGraph } from '@/domain/graph/types';
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -21,4 +23,6 @@ export const MAX_FOLLOW_UPS = 4;
 /** Everything the app asks of a language model. Claude in production, a deterministic mock in tests. */
 export interface AIProvider {
   clarifyGoal(messages: ChatMessage[]): Promise<ClarifyResult>;
+  /** Dependency graph of concepts needed to reach the goal. May be imperfect; callers validate. */
+  generateGraph(summary: GoalSummary): Promise<ConceptGraph>;
 }
