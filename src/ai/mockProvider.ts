@@ -1,3 +1,5 @@
+import type { ConceptGraph } from '@/domain/graph/types';
+import { mockGraphFor } from './mockGraphs';
 import { MAX_FOLLOW_UPS, type AIProvider, type ChatMessage, type ClarifyResult, type GoalSummary } from './types';
 
 const OUTCOME =
@@ -58,6 +60,11 @@ export class MockAIProvider implements AIProvider {
 
     const summary = summarize(messages, askedOutcome);
     return { kind: 'summary', summary, message: "Yay, I think I've got it! Here's what I heard:" };
+  }
+
+  async generateGraph(summary: GoalSummary): Promise<ConceptGraph> {
+    await sleep(this.delayMs);
+    return mockGraphFor(summary);
   }
 }
 
