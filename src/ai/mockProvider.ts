@@ -1,6 +1,15 @@
 import type { ConceptGraph } from '@/domain/graph/types';
 import { mockGraphFor } from './mockGraphs';
-import { MAX_FOLLOW_UPS, type AIProvider, type ChatMessage, type ClarifyResult, type GoalSummary } from './types';
+import { mockTaskFor } from './mockTasks';
+import {
+  MAX_FOLLOW_UPS,
+  type AIProvider,
+  type ChatMessage,
+  type ClarifyResult,
+  type GoalSummary,
+  type TaskContent,
+  type TaskRequest,
+} from './types';
 
 const OUTCOME =
   /\b(build|make|create|design|write|ship|launch|pass|become|automate|train|sort|deploy|cook|bake|play|speak|draw|paint|compose|program|code|fix|run|teach)\b/i;
@@ -65,6 +74,11 @@ export class MockAIProvider implements AIProvider {
   async generateGraph(summary: GoalSummary): Promise<ConceptGraph> {
     await sleep(this.delayMs);
     return mockGraphFor(summary);
+  }
+
+  async generateTask(input: TaskRequest): Promise<TaskContent> {
+    await sleep(this.delayMs);
+    return mockTaskFor(input);
   }
 }
 
