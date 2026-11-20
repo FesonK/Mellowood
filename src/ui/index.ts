@@ -4,4 +4,5 @@ export * from './Input';
 export * from './Badge';
 export * from './ProgressRing';
 export * from './Mascot';
+export * from './Confetti';
 export { cn } from './cn';

@@ -6,6 +6,7 @@ import { AuthProvider } from '@/auth/AuthContext';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { GoalPage } from '@/features/goal/GoalPage';
 import { JourneyPage } from '@/features/journey/JourneyPage';
+import { TaskPage } from '@/features/task/TaskPage';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { SignUpPage } from '@/pages/SignUpPage';
@@ -41,6 +42,16 @@ export function AppRoutes() {
           <RequireAuth>
             <AppShell>
               <JourneyPage />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/goal/:goalId/task"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <TaskPage />
             </AppShell>
           </RequireAuth>
         }
