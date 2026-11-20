@@ -9,6 +9,7 @@ import { loadMastery, saveMastery } from '@/domain/mastery/masteryStore';
 import { fromScratch, mergePlacement } from '@/domain/placement/placement';
 import { GraphSkeleton, GraphView } from '@/features/graph/GraphView';
 import { Button, Mascot } from '@/ui';
+import { EstimateCard } from './EstimateCard';
 import { PlacementQuiz, type PlacementOutcome } from './PlacementQuiz';
 
 type Phase = 'loading' | 'not-found' | 'generating' | 'error' | 'placement' | 'overview';
@@ -120,6 +121,7 @@ export function JourneyPage() {
         <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-berry">Your path is ready</p>
         <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">{goal.summary.title}</h1>
       </header>
+      <EstimateCard graph={goal.graph} mastery={goal.placement?.mastery ?? {}} weeklyHours={goal.placement?.weeklyHours ?? 5} />
       <GraphView graph={goal.graph} mastery={goal.placement?.mastery ?? {}} />
       <div>
         <Button variant="ghost" size="sm" onClick={() => setPhase('placement')}>
