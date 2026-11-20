@@ -46,6 +46,19 @@ describe('nextTask', () => {
     expect(new Set(seen).size).toBeGreaterThanOrEqual(3);
   });
 
+  it('leans hands-on learners toward building while still rotating through every cycle entry', () => {
+    let state = { ...createStrategy('g1', robotGraph, {}), preferences: { handsOn: 1, challenge: 0 } };
+    const seen: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const plan = nextTask(state)!;
+      seen.push(plan.framing);
+      state = advance(state, plan);
+    }
+    expect(seen.filter((f) => f === 'build').length).toBeGreaterThanOrEqual(3);
+    expect(seen).toContain('challenge');
+    for (let i = 1; i < seen.length; i++) expect(seen[i]).not.toBe(seen[i - 1]);
+  });
+
   it('is pure', () => {
     const state = createStrategy('g1', robotGraph, {});
     const before = JSON.stringify(state);
