@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useServices } from '@/app/services';
 import { useAuth } from '@/auth/AuthContext';
 import type { Goal } from '@/domain/goal';
@@ -7,6 +7,9 @@ import { GraphCache } from '@/domain/graph/graphCache';
 import { generateValidGraph, GraphGenerationError } from '@/domain/graph/graphService';
 import { loadMastery, saveMastery } from '@/domain/mastery/masteryStore';
 import { fromScratch, mergePlacement } from '@/domain/placement/placement';
+import { createStrategy } from '@/domain/strategy/strategy';
+import { saveStrategy } from '@/domain/strategy/strategyStore';
+import { buildTrack } from '@/domain/track/track';
 import { GraphSkeleton, GraphView } from '@/features/graph/GraphView';
 import { Button, Mascot } from '@/ui';
 import { EstimateCard } from './EstimateCard';
@@ -18,6 +21,7 @@ export function JourneyPage() {
   const { goalId = '' } = useParams();
   const { repo, ai } = useServices();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [goal, setGoal] = useState<Goal | null>(null);
   const [phase, setPhase] = useState<Phase>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +62,20 @@ export function JourneyPage() {
       cancelled = true;
     };
   }, [goalId, repo, user, ensureGraph]);
+
+  const [joining, setJoining] = useState(false);
+
+  /** Commit to the plan: build the custom track and a fresh strategy, then open the first task. */
+  const join = async () => {
+    if (!user || !goal?.graph) return;
+    setJoining(true);
+    const mastery = await loadMastery(repo, user.id);
+    await repo.put(user.id, 'tracks', buildTrack(goal.id, goal.graph, mastery));
+    await saveStrategy(repo, user.id, createStrategy(goal.id, goal.graph, mastery));
+    const next: Goal = { ...goal, status: 'active' };
+    await repo.put(user.id, 'goals', next);
+    navigate(`/goal/${goal.id}/task`, { state: { celebrate: true } });
+  };
 
   const finishPlacement = async ({ mastery, weeklyHours }: PlacementOutcome, skipped = false) => {
     if (!user || !goal) return;
@@ -123,10 +141,22 @@ export function JourneyPage() {
       </header>
       <EstimateCard graph={goal.graph} mastery={goal.placement?.mastery ?? {}} weeklyHours={goal.placement?.weeklyHours ?? 5} />
       <GraphView graph={goal.graph} mastery={goal.placement?.mastery ?? {}} />
-      <div>
+      <div className="glass sticky bottom-4 z-20 flex flex-col items-center gap-3 rounded-blob p-4 shadow-soft sm:flex-row sm:justify-between">
         <Button variant="ghost" size="sm" onClick={() => setPhase('placement')}>
           Redo placement
         </Button>
+        {goal.status === 'active' ? (
+          <Link
+            to={`/goal/${goal.id}/task`}
+            className="inline-flex h-14 items-center rounded-full bg-gradient-to-br from-berry to-peach px-8 font-display text-lg font-semibold text-white shadow-pop transition hover:brightness-105"
+          >
+            Continue learning
+          </Link>
+        ) : (
+          <Button size="lg" loading={joining} onClick={() => void join()}>
+            Agree to join 🌱
+          </Button>
+        )}
       </div>
     </div>
   );
