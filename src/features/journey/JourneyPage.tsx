@@ -7,7 +7,8 @@ import { GraphCache } from '@/domain/graph/graphCache';
 import { generateValidGraph, GraphGenerationError } from '@/domain/graph/graphService';
 import { loadMastery, saveMastery } from '@/domain/mastery/masteryStore';
 import { fromScratch, mergePlacement } from '@/domain/placement/placement';
-import { Button, Card, Mascot } from '@/ui';
+import { GraphSkeleton, GraphView } from '@/features/graph/GraphView';
+import { Button, Mascot } from '@/ui';
 import { PlacementQuiz, type PlacementOutcome } from './PlacementQuiz';
 
 type Phase = 'loading' | 'not-found' | 'generating' | 'error' | 'placement' | 'overview';
@@ -81,7 +82,13 @@ export function JourneyPage() {
         </Link>
       </CenteredMascot>
     );
-  if (phase === 'generating') return <CenteredMascot mood="thinking" text="Mellow is mapping out your path…" />;
+  if (phase === 'generating')
+    return (
+      <div className="flex flex-col items-center gap-6 pt-6">
+        <Mascot mood="thinking" size={96} />
+        <GraphSkeleton />
+      </div>
+    );
   if (phase === 'error' || !goal?.graph)
     return (
       <CenteredMascot mood="sleepy" text={error ?? 'Something went wrong.'}>
@@ -108,12 +115,18 @@ export function JourneyPage() {
     );
 
   return (
-    <Card title={goal.summary.title} eyebrow="Your path is ready">
-      <p className="text-ink-soft">Overview coming right up.</p>
-      <Button variant="ghost" size="sm" className="mt-4" onClick={() => setPhase('placement')}>
-        Redo placement
-      </Button>
-    </Card>
+    <div className="flex flex-col gap-6">
+      <header>
+        <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-berry">Your path is ready</p>
+        <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">{goal.summary.title}</h1>
+      </header>
+      <GraphView graph={goal.graph} mastery={goal.placement?.mastery ?? {}} />
+      <div>
+        <Button variant="ghost" size="sm" onClick={() => setPhase('placement')}>
+          Redo placement
+        </Button>
+      </div>
+    </div>
   );
 }
 
