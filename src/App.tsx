@@ -5,6 +5,7 @@ import { createServices, ServicesProvider, type AppServices } from '@/app/servic
 import { AuthProvider } from '@/auth/AuthContext';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { GoalPage } from '@/features/goal/GoalPage';
+import { JourneyPage } from '@/features/journey/JourneyPage';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { SignUpPage } from '@/pages/SignUpPage';
@@ -30,6 +31,16 @@ export function AppRoutes() {
           <RequireAuth>
             <AppShell>
               <GoalPage />
+            </AppShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/goal/:goalId"
+        element={
+          <RequireAuth>
+            <AppShell>
+              <JourneyPage />
             </AppShell>
           </RequireAuth>
         }
