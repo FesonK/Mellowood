@@ -65,7 +65,9 @@ function summarize(messages: ChatMessage[], askedOutcomeIndex: number): GoalSumm
   const userTexts = messages.filter((m) => m.role === 'user').map((m) => m.content.trim());
   const outcomeAnswer =
     askedOutcomeIndex >= 0 ? messages.slice(askedOutcomeIndex + 1).find((m) => m.role === 'user')?.content : undefined;
-  const raw = userTexts.find((t) => OUTCOME.test(t)) ?? outcomeAnswer ?? userTexts[0] ?? 'Learn something new';
+  // Prefer the most recent outcome statement so "Not quite" revisions win over the first try.
+  const latestOutcome = [...userTexts].reverse().find((t) => OUTCOME.test(t));
+  const raw = latestOutcome ?? outcomeAnswer ?? userTexts[0] ?? 'Learn something new';
   const endGoal = tidy(raw.split(/[,;]|\bmaybe\b/i)[0]);
   const all = userTexts.join(' ');
   const domain = DOMAINS.find(([re]) => re.test(all))?.[1] ?? 'General';
